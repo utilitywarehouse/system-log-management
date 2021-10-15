@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-controller-logs
+spec:
+  type: NodePort
+  ## Having this enabled, currently causes downtime due to delay in LB
+  ## healthchecks:
+  ##   - https://github.com/kubernetes/kubernetes/issues/85643
+  ##   - https://github.com/kubernetes/enhancements/tree/master/keps/sig-network/1669-graceful-termination-local-external-traffic-policy
+  ## Once resolved, we can re-enable and get source ip back (and the ability to
+  ## whitelist IPs)
+  #
+  #externalTrafficPolicy: Local
+  ports:
+    - name: tls
+      port: 443
+      nodePort: 30344
+  selector:
+    app.kubernetes.io/name: ingress-controller-logs
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: &name ingress-controller-logs
+  labels:
+    app.kubernetes.io/name: *name
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: *name
+  revisionHistoryLimit: 8
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: *name
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8080"
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - *name
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+      terminationGracePeriodSeconds: 60
+      containers:
+        - image: traefik:v2.5.2
+          name: traefik
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 8080
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 8080
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 2000Mi
+            requests:
+              cpu: 50m
+              memory: 50Mi
+          ports:
+            - containerPort: 443
+            - containerPort: 8080
+          args:
+            - --api.insecure=true
+            - --ping
+            - --metrics.prometheus
+            - --log.level=ERROR # default: ERROR
+            - --providers.kubernetescrd.labelselector=kubernetes.io/ingress.class=logs
+            - --providers.kubernetescrd.allowexternalnameservices=true # used for our dummy cert loading service
+            - --entryPoints.web-secure.address=:443
+            - --entryPoints.web-secure.http.tls=true
+            - --entryPoints.traefik.address=:8080
