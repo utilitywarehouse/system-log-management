@@ -7,7 +7,7 @@ variable "fluentd_image_url" {
 variable "fluentd_image_tag" {
   description = "Fluentd's image tag"
   type        = string
-  default     = "1.12.2-1"
+  default     = "v1.14.6-1"
 }
 
 variable "aggregator_host" {
