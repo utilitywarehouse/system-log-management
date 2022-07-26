@@ -1,6 +1,5 @@
 data "ignition_file" "config" {
   mode       = 420
-  filesystem = "root"
   path       = "/etc/fluent/fluent.conf"
 
   content {
