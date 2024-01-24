@@ -1,0 +1,32 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+clients:
+  - url: ${LOKI_URL}
+    basic_auth:
+      username: ${LOKI_USERNAME}
+      password: ${LOKI_PASSWORD}
+    external_labels:
+      log_cluster: ${LOG_CLUSTER}
+      log_machinerole: ${LOG_MACHINEROLE}
+      log_source: systemd
+
+positions:
+  filename: /var/log/promtail-positions.yaml
+target_config:
+  sync_period: 10s
+scrape_configs:
+  - job_name: systemd
+    journal:
+      path: /var/log/journal
+    relabel_configs:
+      - source_labels:
+          - __journal__systemd_unit
+        target_label: systemd_unit
+      - source_labels:
+          - __journal__hostname
+        target_label: log_hostname
+      - source_labels:
+          - __journal_syslog_identifier
+        target_label: syslog_identifier
