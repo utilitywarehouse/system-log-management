@@ -14,7 +14,7 @@ variable "log_machinerole" {
 }
 
 variable "loki_url" {
-  default     = "loki"
+  default     = "loki-write"
   description = "Loki url"
 }
 
