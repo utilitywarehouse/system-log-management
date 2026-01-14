@@ -1,0 +1,36 @@
+sources:
+  systemd_logs:
+    type: journald
+    current_boot_only: true
+    journal_directory: /var/log/journal
+
+transforms:
+  systemd_remap:
+    inputs:
+      - systemd_logs
+    type: remap
+    source: |
+      .systemd_unit = ._SYSTEMD_UNIT
+      .hostname = .host
+      .syslog_identifier = .SYSLOG_IDENTIFIER
+
+sinks:
+  loki_systemd:
+    inputs:
+      - systemd_remap
+    type: loki
+    endpoint: ${LOKI_URL}
+    auth:
+      strategy: "basic"
+      user: ${LOKI_USERNAME}
+      password: ${LOKI_PASSWORD}
+    path: /loki/api/v1/push
+    encoding:
+      codec: text
+    labels:
+      log_cluster: ${LOG_CLUSTER}
+      log_hostname: "{{ hostname }}"
+      log_machinerole: ${LOG_MACHINEROLE}
+      log_source: "systemd"
+      syslog_identifier: "{{ syslog_identifier }}"
+      systemd_unit: "{{ systemd_unit }}"

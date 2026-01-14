@@ -27,14 +27,14 @@ variable "loki_password" {
   description = "Loki password"
 }
 
-variable "promtail_image_url" {
-  description = "Promtail's image url"
+variable "vector_image_url" {
+  description = "Vector's image url"
   type        = string
-  default     = "grafana/promtail"
+  default     = "timberio/vector"
 }
 
-variable "promtail_image_tag" {
-  description = "Promtail's image tag"
+variable "vector_image_tag" {
+  description = "Vector's image tag"
   type        = string
-  default     = "latest"
+  default     = "latest-debian"
 }
