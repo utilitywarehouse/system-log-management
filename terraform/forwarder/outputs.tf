@@ -3,5 +3,9 @@ output "unit" {
 }
 
 output "file" {
-  value = data.ignition_file.config.rendered
+  value = data.ignition_file.systemd.rendered
+}
+
+output "metrics" {
+  value = data.ignition_file.metrics.rendered
 }
