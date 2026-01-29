@@ -10,7 +10,7 @@ ExecStartPre=-/usr/bin/mkdir -p /etc/vector/
 ExecStart=/bin/sh -c "\
     /usr/bin/docker run --rm \
       --name %p_$(uuidgen) \
-      -v /etc/vector/vector-config.yaml:/etc/vector/vector-config.yaml \
+      -v /etc/vector:/etc/vector \
       -v /var/log/journal:/var/log/journal \
       -p 8080:8080 \
       -m 512m \
@@ -20,7 +20,7 @@ ExecStart=/bin/sh -c "\
       -e LOKI_USERNAME='${loki_username}' \
       -e LOKI_PASSWORD='${loki_password}' \
       ${vector_image_url}:${vector_image_tag} \
-      --config /etc/vector/vector-config.yaml"
+      --config-dir /etc/vector"
 ExecStop=-/bin/bash -c 'docker stop -t 3 "$(docker ps -q --filter=name=%p_)"'
 Restart=on-failure
 RestartSec=60

@@ -1,9 +1,18 @@
-data "ignition_file" "config" {
+data "ignition_file" "systemd" {
   mode = 420
-  path = "/etc/vector/vector-config.yaml"
+  path = "/etc/vector/systemd.yaml"
 
   content {
-    content = file("${path.module}/resources/vector-config.yaml")
+    content = file("${path.module}/resources/vector-systemd.yaml")
+  }
+}
+
+data "ignition_file" "metrics" {
+  mode = 420
+  path = "/etc/vector/metrics.yaml"
+
+  content {
+    content = file("${path.module}/resources/vector-metrics.yaml")
   }
 }
 
